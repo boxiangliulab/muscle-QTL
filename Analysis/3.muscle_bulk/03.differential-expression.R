@@ -1,4 +1,4 @@
-# Clinical Data - 02. differential-expression
+# Muscle bulk - 03. differential-expression
 # Load necessary packages
 library(edgeR)
 library(statmod)

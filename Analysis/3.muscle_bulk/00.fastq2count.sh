@@ -4,7 +4,7 @@
 # Input: Paired-end raw fastq/fastq.gz data
 # Output: Read count matrix
 
-
+# Muscle bulk - 00.fastq2count
 # set working directory path
 work_dir=/home/users/nus/e1101919/scratch/muscle_QTL/RNAseq
 

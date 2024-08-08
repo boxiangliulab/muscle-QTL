@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Muscle bulk - differential splicing
 # Set paths and filenames
 junction_files="/home/users/nus/e1101919/scratch/muscle_QTL/RNAseq/07.splicing/script/test_juncfiles.txt"
 output_prefix="SAMS2"

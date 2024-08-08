@@ -1,4 +1,4 @@
-# Clinical Data - 01. pre-process
+# Muscle bulk - 01.pre-process
 # Load necessary packages
 library(statmod)
 

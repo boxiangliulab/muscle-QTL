@@ -1,4 +1,4 @@
-# Clinical Data - 02. pre-process
+# Muscle bulk - 02.bulk PCA
 # Load necessary libraries
 library(ggplot2)
 

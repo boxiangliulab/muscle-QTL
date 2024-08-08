@@ -1,4 +1,4 @@
-# Clinical Data - 03. Enrichment
+# Muscle bulk - 04. Enrichment
 # Load necessary libraries
 library(AnnotationDbi)
 library(org.Hs.eg.db)
