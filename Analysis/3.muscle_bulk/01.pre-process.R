@@ -42,4 +42,6 @@ fpkm <- t(t(counts) / lengths) * 1e9 / colSums(counts)
 tpm <- t(t(fpkm) / colSums(fpkm)) * 1e6
 
 save(expression_res, file = "SAMS2_muscle_count_table.RData")
-save(tpm, file = "SAMS2_muscle_TPM.RData")
+save(tpm, file = "SAMS2_muscle_TPM.RData"
+
+)
