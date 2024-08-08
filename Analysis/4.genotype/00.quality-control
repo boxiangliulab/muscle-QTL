@@ -1,0 +1,71 @@
+# Genotype - 00.quality control
+# Sample-level QC and SNP-level QC
+
+# Set the initial file name
+INITIAL_FILENAME="SAMS2_autosomes_57Chi_Male_QCed_20170719-updated"
+
+# Calculate the missing rate
+plink --bfile $INITIAL_FILENAME --missing
+
+# Keep high calling ratio (initial less stringent threshold)
+# Keep the Sample with missing rate < 0.2
+plink --bfile $INITIAL_FILENAME --mind 0.2 --make-bed --out ${INITIAL_FILENAME}_mind0.2
+
+# Keep the SNP with missing rate < 0.2
+plink --bfile ${INITIAL_FILENAME}_mind0.2 --geno 0.2 --make-bed --out ${INITIAL_FILENAME}_geno0.2
+
+# Keep the Sample with missing rate < 0.02
+plink --bfile ${INITIAL_FILENAME}_geno0.2 --mind 0.02 --make-bed --out ${INITIAL_FILENAME}_mind0.02
+
+# Keep the SNP with missing rate < 0.05
+plink --bfile ${INITIAL_FILENAME}_mind0.02 --geno 0.05 --make-bed --out ${INITIAL_FILENAME}_geno0.05
+
+# Sex check
+plink --bfile ${INITIAL_FILENAME}_geno0.05 --check-sex
+
+# Extract samples with sex discrepancy
+grep "PROBLEM" plink.sexcheck | awk '{print $1, $2}' > sex_discrepancy.txt
+
+# Remove samples with sex discrepancy
+plink --bfile ${INITIAL_FILENAME}_geno0.05 --remove sex_discrepancy.txt --make-bed --out ${INITIAL_FILENAME}_sexchecked
+
+# MAF filtering
+# Extract SNPs on autosomes (1-22)
+awk '{ if ($1 >= 1 && $1 <= 22) print $2 }' ${INITIAL_FILENAME}_sexchecked.bim > snp_1_22.txt
+
+# Extract SNPs on autosomes
+plink --bfile ${INITIAL_FILENAME}_sexchecked --extract snp_1_22.txt --make-bed --out ${INITIAL_FILENAME}_autosomes
+
+# Generate MAF
+plink --bfile ${INITIAL_FILENAME}_autosomes --freq --out MAF_check
+
+# Remove SNPs with MAF < 5%
+plink --bfile ${INITIAL_FILENAME}_autosomes --maf 0.05 --make-bed --out ${INITIAL_FILENAME}_maf0.05
+
+# Delete SNPs that do not match the Hardy-Weinberg balance
+# Generate HWE for SNPs
+plink --bfile ${INITIAL_FILENAME}_maf0.05 --hardy
+
+# Filter SNPs that don't match HWE balance
+plink --bfile ${INITIAL_FILENAME}_maf0.05 --hwe 1e-6 --make-bed --out ${INITIAL_FILENAME}_hwe
+
+# Check heterozygosity deviation
+# Generate independent SNPs for heterozygosity calculation
+plink --bfile ${INITIAL_FILENAME}_hwe --range --indep-pairwise 50 5 0.2 --out indepSNP
+
+# Calculate heterozygosity
+plink --bfile ${INITIAL_FILENAME}_hwe --extract indepSNP.prune.in --het --out R_check
+
+# Extract the rows of samples whose heterozygosity differs from the mean by more than three standard deviations
+Rscript --no-save heterozygosity_outliers_list.R
+
+# Extract samples with failed heterozygosity
+sed 's/"//g' fail-het-qc.txt | awk '{print $1, $2}' > het_fail_ind.txt
+
+# Delete the failed samples
+plink --bfile ${INITIAL_FILENAME}_hwe --remove het_fail_ind.txt --make-bed --out ${INITIAL_FILENAME}_hetcleaned
+
+# Clear the relatedness
+# Estimate relationships and remove individuals with too close relationships
+plink --bfile ${INITIAL_FILENAME}_hetcleaned --extract indepSNP.prune.in --genome --min 0.2 --out pihat_min0.2
+
