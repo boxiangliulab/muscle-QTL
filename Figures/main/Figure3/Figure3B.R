@@ -1,47 +1,63 @@
-# Load necessary libraries
 library(circlize)
+library(dplyr)
 
-# Create data frames for plotting
-shared_df <- data.frame(gene = shared_genes, group = "Shared")
-pre_specific_df <- data.frame(gene = pre_specific_genes, group = "Pre-specific")
-post_specific_df <- data.frame(gene = post_specific_genes, group = "Post-specific")
+# Assume Pre_eGene and Post_eGene dataframes are already loaded and have a 'family' column
+# Extract shared and specific eQTL families
+eQTL_shared <- intersect(Pre_eGene$family, Post_eGene$family)
+Pre_eQTL_specific <- setdiff(Pre_eGene$family, Post_eGene$family)
+Post_eQTL_specific <- setdiff(Post_eGene$family, Pre_eGene$family)
 
-# Combine data frames
-gene_data <- rbind(shared_df, pre_specific_df, post_specific_df)
+# Convert vectors to data frames and set column names
+eQTL_shared <- data.frame(family = eQTL_shared)
+Pre_eQTL_specific <- data.frame(family = Pre_eQTL_specific)
+Post_eQTL_specific <- data.frame(family = Post_eQTL_specific)
 
-# Merge with additional details from original data frames
-gene_details <- rbind(Pre_sGene, Post_sGene)
-colnames(gene_details)[1] <- "gene"  # Ensure the gene column name matches
-plot_data <- merge(gene_data, gene_details, by = "gene", all.x = TRUE)
+# Assuming 'gencode' is preloaded and contains genomic annotations
+gencode$V5 <- gsub("\\..*", "", gencode$V5)
+colnames(gencode)[5] <- "family"
 
-# Calculate the average position for visualization
-plot_data$average <- rowMeans(plot_data[, c("V3", "V4")], na.rm = TRUE)
+# Merge with gencode to get full annotation details
+Pre_eQTL_full <- merge(Pre_eQTL_specific, gencode, by = "family")
+Post_eQTL_full <- merge(Post_eQTL_specific, gencode, by = "family")
+eQTL_shared_full <- merge(data.frame(family = eQTL_shared), gencode, by = "family")
 
-# Prepare data for circlize plotting
-plot_data$chr <- factor(plot_data$chr, levels = paste0("chr", 1:22))
+# Calculate average genomic position for plotting (assuming V2 and V3 are positions)
+Pre_eQTL_full$average <- round(rowMeans(Pre_eQTL_full[, c("V2", "V3")], na.rm = TRUE))
+Post_eQTL_full$average <- round(rowMeans(Post_eQTL_full[, c("V2", "V3")], na.rm = TRUE))
+eQTL_shared_full$average <- round(rowMeans(eQTL_shared_full[, c("V2", "V3")], na.rm = TRUE))
+
+# Combine all for plotting
+eQTL_data <- bind_rows(
+  Pre_eQTL_full %>% mutate(group = "Pre-specific"),
+  Post_eQTL_full %>% mutate(group = "Post-specific"),
+  eQTL_shared_full %>% mutate(group = "Shared")
+)
+
+# Setting the chromosomal data correctly assuming chromosome data is in a column `chr`
+eQTL_data$chr <- factor(eQTL_data$chr, levels = paste0("chr", 1:22))
 
 # Initialize circos plot
 circos.clear()
-circos.par("track.height" = 0.1, gap.degree = 3, start.degree = 90,
-           clock.wise = TRUE, track.margin = c(0, 0.02), cell.padding = c(0, 0, 0, 0))
-circos.initializeWithIdeogram(species = "hg38", chromosome.index = paste0('chr', 1:22))
+circos.par("track.height" = 0.1, "gap.degree" = 3, "start.degree" = 90, "clock.wise" = TRUE, "track.margin" = c(0, 0.02))
 
-# Define colors for groups
-group_colors <- c("Shared" = "black", "Pre-specific" = "#F87660", "Post-specific" = "#619CFF")
+# Initialize with human ideogram (hg38), assuming it has been properly set up
+circos.initializeWithIdeogram(species = "hg38", chromosome.index = paste0("chr", 1:22))
 
-# Add tracks for each group
-for(group_name in names(group_colors)) {
-  group_data <- subset(plot_data, group == group_name)
-  circos.trackPlotRegion(factors = group_data$chr, ylim = c(0, 1), track.height = 0.05, 
-                         panel.fun = function(x, y) {
-                           sector.index <- CELL_META$sector.index
-                           chr_data <- subset(group_data, chr == sector.index)
-                           for (pos in chr_data$average) {
-                             circos.lines(c(pos, pos), c(0, 1), col = group_colors[group_name])
-                           }
-                         })
+# Define colors for each group
+colors <- c("Pre-specific" = "#619CFF", "Post-specific" = "#F87660", "Shared" = "black")
+
+# Create tracks for each group
+for(group in unique(eQTL_data$group)) {
+  chr_data <- subset(eQTL_data, group == group)
+  circos.trackPlotRegion(factors = chr_data$chr, ylim = c(0, 1), track.height = 0.05, panel.fun = function(x, y) {
+    sector.index <- CELL_META$sector.index
+    chr_data_sub <- chr_data[chr_data$chr == sector.index, ]
+    
+    for(pos in chr_data_sub$average) {
+      circos.lines(c(pos, pos), c(0, 1), col = colors[group])
+    }
+  })
 }
 
-# Saving the circos plot
-circos.save("sQTL_circular_plot.png")
-
+# Print or save the plot
+# circos.save("eQTL_circos_plot.png")
