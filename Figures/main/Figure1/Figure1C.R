@@ -1,54 +1,91 @@
+# Load necessary libraries
 library(dplyr)
-library(tidyr)
 library(ggplot2)
 
-# Convert selected variables to numeric type because data might be in factor or character form.
-# Variables_of_interest here means the fat and lean-related variables.
-pre_selected <- pre_imputed[variables_of_interest] %>% mutate(across(everything(), ~as.numeric(as.character(.))))
-post_selected <- post_imputed[variables_of_interest] %>% mutate(across(everything(), ~as.numeric(as.character(.))))
+# Function to calculate fat and lean percentages
+calculate_percentages <- function(df) {
+  df %>%
+    mutate(
+      rarm_fat_perc = rarm_fat_post / rarm_totalmass_post * 100,
+      rarm_lean_perc = rarm_lean_post / rarm_totalmass_post * 100,
+      larm_fat_perc = larm_fat_post / larm_totalmass_post * 100,
+      larm_lean_perc = larm_lean_post / larm_totalmass_post * 100,
+      trunk_fat_perc = trunk_fat_post / trunk_totalmass_post * 100,
+      trunk_lean_perc = trunk_lean_post / trunk_totalmass_post * 100,
+      rleg_fat_perc = rleg_fat_post / rleg_totalmass_post * 100,
+      rleg_lean_perc = rleg_lean_post / rleg_totalmass_post * 100,
+      lleg_fat_perc = lleg_fat_post / lleg_totalmass_post * 100,
+      lleg_lean_perc = lleg_lean_post / lleg_totalmass_post * 100,
+      twb_fat_perc = twb_fat_post / twb_totalmass_post * 100,
+      twb_lean_perc = twb_lean_post / twb_totalmass_post * 100,
+      st_fat_perc = st_fat_post / st_totalmass_post * 100,
+      st_lean_perc = st_lean_post / st_totalmass_post * 100,
+      head_fat_perc = head_fat_post / head_totalmass_post * 100,
+      head_lean_perc = head_lean_post / head_totalmass_post * 100
+    )
+}
 
-# Add a time column to distinguish between 'Pre' and 'Post' data
-pre_selected$Time <- 'Pre'
-post_selected$Time <- 'Post'
+# Apply the function to calculate percentages for pre and post datasets
+pre_perc <- calculate_percentages(pre)
+post_perc <- calculate_percentages(post)
 
-# Combine the data for easier manipulation and plotting
-data <- bind_rows(pre_selected, post_selected)
+# Function to calculate percentage changes
+calculate_change <- function(pre, post, column) {
+  (post[[column]] - pre[[column]]) / pre[[column]] * 100
+}
 
-# Convert the wide format data to long format for easier plotting
-data_long <- pivot_longer(data, cols = variables_of_interest, names_to = "Variable", values_to = "Value")
+# Function to remove outliers
+remove_outliers <- function(df, column) {
+  Q1 <- quantile(df[[column]], 0.25)
+  Q3 <- quantile(df[[column]], 0.75)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  df %>% filter(df[[column]] >= lower_bound & df[[column]] <= upper_bound)
+}
 
-# Calculate the percentage change for each variable
-change_percent <- (post_selected - pre_selected) / pre_selected * 100
-change_percent_long <- pivot_longer(change_percent, cols = variables_of_interest, names_to = "Variable", values_to = "PercentChange")
+# List of metrics to be analyzed
+metrics <- c(
+  "liver.fat", "vat", "sat", "dsat", "ssat", "skeletal.muscle.fat",
+  "rarm_fat_perc", "rarm_lean_perc", "larm_fat_perc", "larm_lean_perc",
+  "trunk_fat_perc", "trunk_lean_perc", "rleg_fat_perc", "rleg_lean_perc",
+  "lleg_fat_perc", "lleg_lean_perc", "twb_fat_perc", "twb_lean_perc",
+  "st_fat_perc", "st_lean_perc", "head_fat_perc", "head_lean_perc"
+)
 
-# Plotting the percentage change as a boxplot
-ggplot(change_percent_long, aes(x = Variable, y = PercentChange, fill = Variable)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  labs(title = "Percentage Change of Fat-Related Variables", x = "Variable", y = "Percent Change (%)")
+# Calculate mean changes and standard errors for each metric after removing outliers
+changes_stats <- t(sapply(metrics, function(metric) {
+  pre_clean <- remove_outliers(pre_perc, metric)
+  post_clean <- remove_outliers(post_perc, metric)
+  mean_change <- calculate_change(pre_clean, post_clean, metric)
+  se_change <- sd(post_clean[[metric]]) / sqrt(nrow(post_clean))
+  c(mean_change, se_change)
+}))
 
-# Dot plot for individual percentage changes
-ggplot(change_percent_long, aes(x = Variable, y = PercentChange, color = Variable)) +
-  geom_point(alpha = 0.6) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = "Dot Plot of Percentage Change for Each Subject", x = "Variable", y = "Percent Change (%)")
+# Convert changes stats to a data frame
+change_df <- data.frame(
+  Metric = metrics,
+  Mean_Change = changes_stats[,1],
+  SE_Change = changes_stats[,2]
+)
 
-# Calculate the median of percentage changes by variable and sort by median
-median_changes <- change_percent_long %>%
-  group_by(Variable) %>%
-  summarize(Median = median(PercentChange, na.rm = TRUE)) %>%
-  arrange(Median)
+# Calculate 95% confidence intervals
+confidence_level <- 0.95
+t_value <- qt(1 - (1 - confidence_level) / 2, df = nrow(pre) - 1)
+change_df <- change_df %>%
+  mutate(
+    CI_lower = Mean_Change - t_value * SE_Change,
+    CI_upper = Mean_Change + t_value * SE_Change,
+    Significant = ifelse(CI_lower > 0 | CI_upper < 0, "Significant", "Not Significant")
+  )
 
-# Print the sorted median changes
-print(median_changes)
+# Sort by mean change percentage
+change_df <- change_df %>% arrange(Mean_Change)
 
-# Update factor levels to sort the variables in the plots based on the median change
-change_percent_long$Variable <- factor(change_percent_long$Variable, levels = median_changes$Variable)
-
-# Plotting a sorted boxplot of percentage changes
-ggplot(change_percent_long, aes(x = Variable, y = PercentChange, fill = Variable)) +
-  geom_boxplot(outlier.shape = NA) +
-  coord_cartesian(ylim = c(-100, 100)) +  # Limiting y-axis to -100% to 100% for better visualization
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  labs(title = "Sorted Boxplot of Percentage Change of Fat-Related Variables", x = "Variable", y = "Percent Change (%)")
-
+# Create a forest plot of body composition changes
+ggplot(change_df, aes(x = Mean_Change, y = reorder(Metric, Mean_Change))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = CI_lower, xmax = CI_upper), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(x = "Mean Change (%)", y = "", title = "Forest Plot of Body Composition Changes") +
+  theme_minimal()
