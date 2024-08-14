@@ -28,7 +28,7 @@ p <- ggplot(data_filtered, aes(x = condition, y = expression, group = sample)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Adjust x-axis text angle
 
-# Adding p-values (assuming you have them calculated)
+# Adding p-values
 # You can manually add them using annotate() if you have a predefined list
 p <- p + annotate("text", x = 1.5, y = Inf, label = "Paired t-test p = X.XXe-XX", vjust = 1.5)
 

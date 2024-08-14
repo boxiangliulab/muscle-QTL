@@ -1,8 +1,6 @@
 library(circlize)
 library(dplyr)
 
-# Assume Pre_eGene and Post_eGene dataframes are already loaded and have a 'family' column
-# Extract shared and specific eQTL families
 eQTL_shared <- intersect(Pre_eGene$family, Post_eGene$family)
 Pre_eQTL_specific <- setdiff(Pre_eGene$family, Post_eGene$family)
 Post_eQTL_specific <- setdiff(Post_eGene$family, Pre_eGene$family)
@@ -12,7 +10,6 @@ eQTL_shared <- data.frame(family = eQTL_shared)
 Pre_eQTL_specific <- data.frame(family = Pre_eQTL_specific)
 Post_eQTL_specific <- data.frame(family = Post_eQTL_specific)
 
-# Assuming 'gencode' is preloaded and contains genomic annotations
 gencode$V5 <- gsub("\\..*", "", gencode$V5)
 colnames(gencode)[5] <- "family"
 
@@ -58,6 +55,3 @@ for(group in unique(eQTL_data$group)) {
     }
   })
 }
-
-# Print or save the plot
-# circos.save("eQTL_circos_plot.png")

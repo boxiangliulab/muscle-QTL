@@ -3,7 +3,7 @@ library(ggplot2)
 library(gcookbook)
 library(dplyr)
 
-# User inputs
+# Inputs
 target_rs_id <- "target_rs_id"  # Target SNP ID
 gene_data_file <- "gene_data_file"  # Path to the gene data file
 ld_matrix_file <- "ld_matrix_file"  # Path to the LD matrix file

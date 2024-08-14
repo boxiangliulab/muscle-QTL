@@ -24,7 +24,7 @@ down_KEGG <- load_pathway_data("kegg_down.txt", "KEGG", "Down")
 up_GO <- load_pathway_data("go_up.txt", "GO", "Up")
 up_KEGG <- load_pathway_data("kegg_up.txt", "KEGG", "Up")
 up_REA <- load_pathway_data("rea_up.txt", "Reactome", "Up")
-up_GSEA <- load_pathway_data("gsea_up.txt", "GSEA", "Up", setSize)  # assuming setSize is available
+up_GSEA <- load_pathway_data("gsea_up.txt", "GSEA", "Up", setSize)
 
 # Combine all data and filter by significance
 all_pathways <- bind_rows(down_GO, down_REA, down_KEGG, up_GO, up_KEGG, up_REA, up_GSEA) %>%
@@ -33,7 +33,7 @@ all_pathways <- bind_rows(down_GO, down_REA, down_KEGG, up_GO, up_KEGG, up_REA, 
 # Renaming geneID column across different data sources
 all_pathways <- all_pathways %>%
   rename(geneID = starts_with("geneID")) %>%
-  arrange(desc(realp))  # arrange by significance if needed
+  arrange(desc(realp)) 
 
 # Select specific pathways for the plot
 selected_indices <- c(6, 8, 9, 25, 33, 34, 37, 40, 44, 55, 68, 70, 80, 102, 157, 177, 205, 299, 301, 304)

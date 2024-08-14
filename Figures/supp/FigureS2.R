@@ -1,8 +1,7 @@
 library(ggplot2)
 
 # Part A: Histogram
-# Assuming you have a data frame `exercise_data` with a column `session_count` for the number of exercise sessions
-# Load your exercise session data here
+# Load exercise session data
 exercise_data <- read.csv("SAMS2_exercise_data.csv")  # Extract the gym_visits variable
 
 # Create histogram
@@ -15,15 +14,14 @@ p1 <- ggplot(exercise_data, aes(x = session_count)) +
   theme_minimal()
 
 # Part B: Error Bar Plot
-# Assuming you have a data frame `diet_data` with columns `component` and `percentage_change`
-# Load your diet change data here
+# Load diet change data
 diet_data <- read.csv("SAMS2_diet_data.csv")  # Extract the diet data 
 
 # Create error bar plot
 p2 <- ggplot(diet_data, aes(x = component, y = percentage_change)) +
   geom_point() +
   geom_errorbar(aes(ymin = percentage_change - 10, ymax = percentage_change + 10), width = 0.2) +  # Adjust error range
-  coord_flip() +  # Flip coordinates to match the original layout
+  coord_flip() +
   labs(title = "Dietary Intake Percentage Change (%)",
        x = NULL,
        y = "Percentage Change (%)") +

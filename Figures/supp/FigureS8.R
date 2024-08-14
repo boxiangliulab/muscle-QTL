@@ -2,7 +2,7 @@
 library(ggplot2)
 
 ggplot(plink_check_sex, aes(x = F_index)) +
-  geom_histogram(bins = 10, fill = "blue", color = "black") +  # You can adjust the number of bins as needed
+  geom_histogram(bins = 10, fill = "blue", color = "black") + 
   labs(title = "Gender Determination Based on F Index", x = "F Index (plink --check-sex)", y = "Frequency") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))  # Center the plot title

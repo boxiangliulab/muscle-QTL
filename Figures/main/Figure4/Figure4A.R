@@ -1,7 +1,6 @@
 # Load necessary libraries
 library(circlize)
 
-# Create data frames for plotting
 shared_df <- data.frame(gene = shared_genes, group = "Shared")
 pre_specific_df <- data.frame(gene = pre_specific_genes, group = "Pre-specific")
 post_specific_df <- data.frame(gene = post_specific_genes, group = "Post-specific")

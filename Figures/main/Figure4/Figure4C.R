@@ -1,5 +1,5 @@
 /home/project/11003054/e1101919/software/ggsashimi.py \  # Path to the ggsashimi.py script
--b /home/project/11003054/e1101919/muscle_QTL/RNAseq/07.splicing/ggsashimi/input_bams_ANK1_pre.tsv \  # Path to the TSV file listing BAM files and labels
+-b /home/project/11003054/e1101919/muscle_QTL/RNAseq/07.splicing/ggsashimi/input_bams_ANK1_pre.tsv \ 
 -c chr8:41652753-41664801 \  # Genomic coordinates for the plot
 -g /home/project/11003054/e1101919/muscle_QTL/RNAseq/db/gencode.v44.primary_assembly.annotation.gtf \  # Path to the GTF file with gene annotations
 -M 10 \  # Maximum number of reads to show in each pileup

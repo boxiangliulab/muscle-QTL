@@ -18,7 +18,7 @@ extract_genotypes <- function(vcf_path, snp_id) {
     # Parse genotypes to a more readable format (e.g., AA, AT, TT)
     readable_genotypes <- apply(genotypes, 2, function(g) {
         gsub("0", vcf@ref[snp_index], g)
-        gsub("1", vcf@alt[snp_index, 1], g) # Assuming biallelic SNP for simplicity
+        gsub("1", vcf@alt[snp_index, 1], g)
     })
 
     # Return a dataframe with Sample IDs and their genotypes
@@ -50,11 +50,11 @@ plot_gene_expression <- function(expr_data, gene_id, genotype_data) {
         theme_minimal()
 }
 
-# Example usage
-vcf_path <- "path/to/your/data.vcf"
+# Example
+vcf_path <- "SAMS2.vcf"
 snp_id <- "rs12437434"
 gene_id <- "ENSG00000187630"
-expr_data <- corrected_TPM_SAMS2_bulk  # assuming this is loaded with correct rownames as gene IDs
+expr_data <- corrected_TPM_SAMS2_bulk
 
 genotype_data <- extract_genotypes(vcf_path, snp_id)
 expression_plot <- plot_gene_expression(expr_data, gene_id, genotype_data)

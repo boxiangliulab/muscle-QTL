@@ -19,12 +19,6 @@ categories_df <- data.frame(
 # Convert 'Trait' column to character to ensure correct merging
 categories_df$Trait <- as.character(categories_df$Trait)
 
-# Example data frame for percent changes (this should be your actual data)
-change_percent_long <- data.frame(
-  Trait = sample(categories_df$Trait, 100, replace = TRUE),  # example Trait names
-  PercentChange = rnorm(100)  # example PercentChanges
-)
-
 # Merge percent change data with categories
 change_percent_long <- left_join(change_percent_long, categories_df, by = "Trait")
 
@@ -39,24 +33,20 @@ ggplot(change_percent_long, aes(x = PercentChange, y = fct_reorder(Trait, Percen
   labs(title = "Percentage Change in Body Measurement Traits by Category",
        x = "Percent Change (%)",
        y = "Trait") +
-  theme(legend.position = "bottom")  # Display legend at the bottom
+  theme(legend.position = "bottom") 
 
-# Calculate and plot differences using detailed data handling (Example placeholders)
 # Variables of interest from the hypothetical data
 variables_of_interest <- names(categories_df$Trait)
 
-# Assuming you have pre and post data frames named 'final_pre_data_clinical' and 'final_post_data_clinical'
 pre_selected <- final_pre_data_clinical[variables_of_interest] %>% mutate_all(as.numeric)
 post_selected <- final_post_data_clinical[variables_of_interest] %>% mutate_all(as.numeric)
 
 # Compute percent changes
 change_percent <- 100 * (post_selected - pre_selected) / pre_selected
 
-# Convert to long format for easier plotting
 change_percent_long <- pivot_longer(change_percent, cols = everything(), names_to = "Trait", values_to = "PercentChange")
 
 # Plot percent changes with a forest plot showing confidence intervals (CIs)
-# Note: This example assumes CIs are calculated and included in your data.
 ggplot(change_percent_long, aes(x = PercentChange, y = fct_reorder(Trait, PercentChange, .fun = median), fill = Trait)) +
   geom_point() +
   geom_errorbarh(aes(xmin = CI_lower, xmax = CI_upper), height = 0.2) +  # Example CIs

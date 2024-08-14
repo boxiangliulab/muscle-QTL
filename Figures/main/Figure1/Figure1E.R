@@ -4,8 +4,8 @@ library(ggplot2)
 # Load the lipidomics data
 load("~/OneDrive - National University of Singapore/SAMS2_bulk/github/lipidomics_data.RData")
 
-# Run PCA on the lipidomics data excluding non-numeric columns and the 'Time' column
-# Typically, you'd select only the relevant lipid measurements columns, here assumed all except the first
+# Time means 'Pre' or 'Post'
+
 pca_results <- prcomp(lipidomics_data[, -which(names(lipidomics_data) %in% c("Time"))], scale. = TRUE)
 
 # Extract scores

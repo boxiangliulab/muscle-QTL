@@ -7,10 +7,8 @@ data <- data.frame(
   pi1 = c(1, 0.91)
 )
 
-# Ensure 'group' is treated as a factor with specified levels
 data$group <- factor(data$group, levels = c("Pre", "Post"))
 
-# Create a bar plot
 P1 <- ggplot(data, aes(x = group, y = pi1, fill = group)) +
   geom_bar(stat = "identity", width = 0.6, color = "black") +  # Add borders and adjust bar width
   scale_fill_manual(values = c("Pre" = "skyblue", "Post" = "salmon")) +  # Customize bar colors
@@ -27,8 +25,6 @@ P1 <- ggplot(data, aes(x = group, y = pi1, fill = group)) +
     title = "Comparison of Pi1 Values Between Groups"  # Custom and descriptive title
   )
 
-# Display the plot
 print(P1)
 
-# Optionally, save the plot to a file
 ggsave("Pi1_comparison_plot.pdf", plot = P1, width = 5, height = 4)

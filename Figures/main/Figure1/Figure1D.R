@@ -50,7 +50,6 @@ plot_levels_over_time <- function(data, variable_prefix, time_order, output_file
 time_order_insulin <- c("insulin.0h","insulin.1.5h","insulin.2h")
 time_order_glucose <- c("glucose.0h", "glucose.0.5h", "glucose.1h", "glucose.1.5h", "glucose.2h", "glucose.4h")
 
-# Assuming 'insulin_time' contains both insulin and glucose data or adjust accordingly
 plot_levels_over_time(insulin_time, "insulin", time_order_insulin, "Insulin level over time.pdf")
 plot_levels_over_time(insulin_time, "glucose", time_order_glucose, "Glucose level over time.pdf")
 

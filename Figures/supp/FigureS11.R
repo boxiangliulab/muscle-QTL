@@ -1,6 +1,6 @@
 ## Load necessary library
 library(ggplot2)
-library(qqman)  # Ensure this library is installed for qq plots
+library(qqman)
 
 ## Figure S11A - Line chart similar to the previous Figure S9A
 P1 <- ggplot(data, aes(x = Number_of_PC)) +

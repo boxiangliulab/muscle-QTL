@@ -1,7 +1,6 @@
 library(ggplot2)
 library(dplyr)
 
-# Assuming 'myocyte' is the column of interest
 # Extract 'myocyte' column from each dataset and create a combined data frame with an intervention label
 pre_data <- pre_celltype_fraction_bmind %>%
   select(myocyte) %>%
@@ -23,5 +22,5 @@ ggplot(combined_data, aes(x = Intervention, y = myocyte, fill = Intervention)) +
        x = NULL,
        y = "Myocyte Fraction") +
   theme_minimal() +
-  theme(legend.position = "none")  # Remove the legend if not needed
+  theme(legend.position = "none") 
 

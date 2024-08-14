@@ -3,7 +3,6 @@
 library(ggplot2)
 
 # Prepare data
-# Define the plot
 P1 <- ggplot(data, aes(x = Number_of_PC)) +
   geom_line(aes(y = PRE, color = "PRE"), size = 0.5) +
   geom_point(aes(y = PRE), color = "darkred", size = 4) +

@@ -23,13 +23,7 @@ ggplot(data.frame(Read_Depth = read_depths), aes(x = Read_Depth)) +
 # Figure S5B
 library(ggplot2)
 
-# Example data for X and Y chromosome coverage
-# Normally you'd extract this data from the BAM files or a summary file
-chromosome_coverage <- data.frame(
-  Sample = paste("Sample", 1:100),
-  X_Coverage = runif(100, 2, 8),
-  Y_Coverage = runif(100, 1.5, 3.5)
-)
+# Extract this data from the BAM files
 
 # Creating the scatter plot
 ggplot(chromosome_coverage, aes(x = X_Coverage, y = Y_Coverage)) +
@@ -41,8 +35,8 @@ ggplot(chromosome_coverage, aes(x = X_Coverage, y = Y_Coverage)) +
 library(ggplot2)
 library(ggfortify)
 
-# Load your count data (this should be a matrix or data frame of counts)
-count_data <- read.csv("/path/to/SAMS2_count_table.csv")  # Update with the actual path
+# Load count dat
+count_data <- read.csv("SAMS2_count_table.csv") 
 
 # Perform PCA
 pca_result <- prcomp(count_data, scale. = TRUE)

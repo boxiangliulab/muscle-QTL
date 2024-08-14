@@ -1,14 +1,11 @@
 library(ggplot2)
 library(readr)
 
-# Define file paths
 diff_quant_data_file <- paste(out, "DiffQuantData.txt", sep = "")
 volcano_plot_file <- paste(out, "volcano.pdf", sep = "")
 
-# Read data
 data <- read_delim(diff_quant_data_file, delim = "\t")
 
-# Define colors
 cols <- c("No_Sig" = "#b4b4d8", "Up" = "#e94234", "Down" = "#269846")
 
 # Plot

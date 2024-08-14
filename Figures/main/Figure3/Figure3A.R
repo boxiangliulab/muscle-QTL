@@ -5,9 +5,6 @@ if (!requireNamespace("ComplexUpset", quietly = TRUE)) {
 library(ComplexUpset)
 library(ggplot2)
 
-# Assuming eGenes_preINpostFDR50, eGenes_postINpreFDR50, sig_lead_pre, and sig_lead_post
-# are already loaded in your environment
-
 # Extract 'gene' columns from each dataframe
 genes_preINpostFDR50 <- eGenes_preINpostFDR50$gene
 genes_postINpreFDR50 <- eGenes_postINpreFDR50$gene
@@ -29,7 +26,7 @@ upset_plot <- upset(
   gene_data,
   sets = c("Post_in_Pre", "Pre_in_Post", "Sig_Lead_Post", "Sig_Lead_Pre"),
   order.by = "freq",
-  keep.order = TRUE,  # Maintain the order of the sets as provided
+  keep.order = TRUE,d
   sets.bar.color = c("#a6cee3", "#1f78b4", "#fb9a99", "#e31a1c"),
   main.bar.color = "black"
 )
