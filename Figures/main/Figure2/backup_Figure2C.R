@@ -41,5 +41,3 @@ labeledHeatmap(Matrix = moduleTraitCor,
                textMatrix = textMatrix, setStdMargins = FALSE, cex.text = 0.5, zlim = c(-1,1),
                main = paste("Module-trait relationships"))
 dev.off()
-
-# Network plot is from Cytoscape

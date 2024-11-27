@@ -1,49 +1,29 @@
-#!/bin/bash
+# Figure S14A
+ggplot(expr_ANK1, aes(x = Time, y = Expression, group = Sample)) +
+  geom_line(color = "grey") +
+  geom_point(aes(color = Time), size = 3, position = position_dodge(0.2)) +
+  stat_summary(fun = mean, geom = "line", aes(group = 1), color = "blue", size = 1) +
+  labs(title = "ANKT Expression (TPM)",
+       subtitle = "Paired t-test p-value: 0.0106",
+       x = NULL,
+       y = "ANKT Exp (TPM)") +
+  scale_color_manual(values = c("Pre" = "red", "Post" = "blue")) +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-# Define the path to the LDBlockShow binary
-LDBlockShow_path="/home/project/11003054/e1101919/software/LDBlockShow/bin/LDBlockShow"
+  # Figure S14B
+ggplot(isoform_comparison, aes(x = Variant, y = Value, color = Group)) +
+  geom_point(position = position_dodge(0.2), size = 3) +
+  geom_errorbar(aes(ymin = Value - se, ymax = Value + se), width = 0.2, position = position_dodge(0.2)) +
+  scale_color_manual(values = c("Chinese obese" = "blue", "Chinese lean" = "red")) +
+  labs(x = NULL, y = "-dCt Value") +
+  theme_minimal() +
+  theme(legend.position = "none")
 
-# Specify the input VCF file for the ANK1 gene
-vcf_input="/home/project/11003054/e1101919/muscle_QTL/RNAseq/07.splicing/ggsashimi/input_bams_ANK1_pre.tsv"
-
-# Define output parameters
-output_base="/home/project/11003054/e1101919/muscle_QTL/RNAseq/17.susie"
-output_name="ANK1_susie"
-
-# Define the genomic region of interest
-region="chr8:41663473:41667473"
-
-# Specify the input GWAS summary statistics file
-gwas_input="/home/project/11003054/e1101919/muscle_QTL/RNAseq/17.susie/pip.value"
-
-# Name of the file containing specific SNP names to highlight
-snp_names_file="/home/project/11003054/e1101919/muscle_QTL/RNAseq/17.susie/target.txt"
-
-# Run LDBlockShow to visualize linkage disequilibrium
-$LDBlockShow_path \
-  -InVCF $vcf_input \
-  -OutPut $output_base/$output_name \
-  -Region $region \
-  -OutPng \
-  -SeleVar 2 \
-  -InGWAS $gwas_input \
-  -ShowGWASSpeSNP \
-  -SpeSNPName $snp_names_file
-
-# Check if there is an unknown argument error, adjust command accordingly
-if [ $? -ne 0 ]; then
-  echo "Error encountered with LDBlockShow. Checking command options."
-
-  # Attempt to run without the problematic parameter
-  $LDBlockShow_path \
-    -InVCF $vcf_input \
-    -OutPut $output_base/$output_name \
-    -Region $region \
-    -OutPng \
-    -SeleVar 2 \
-    -InGWAS $gwas_input \
-    -ShowGWASSpeSNP \
-    -SpeSNPName $snp_names_file
-fi
-
-echo "LDBlockShow operation completed."
+  # Figure S14C
+  ggplot(expression_by_ANK1, aes(x = Genotype, y = Expression, fill = Time)) +
+  geom_boxplot(outlier.color = "black", position = position_dodge(0.8)) +
+  scale_fill_manual(values = c("Pre" = "red", "Post" = "blue")) +
+  labs(x = "rs508419", y = "ANK1 Expression") +
+  theme_minimal() +
+  theme(legend.position = "right", legend.title = element_blank())

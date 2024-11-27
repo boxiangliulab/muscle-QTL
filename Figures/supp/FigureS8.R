@@ -1,59 +1,36 @@
-# Figure S8A
+library(tidyverse)
 library(ggplot2)
 
-ggplot(plink_check_sex, aes(x = F_index)) +
-  geom_histogram(bins = 10, fill = "blue", color = "black") + 
-  labs(title = "Gender Determination Based on F Index", x = "F Index (plink --check-sex)", y = "Frequency") +
+SAMS2_count_TPM <- read.csv("SAMS2_count_TPM.csv", row.names = 1)
+
+SAMS2_long <- SAMS2_count_TPM %>%
+  pivot_longer(cols = everything(), names_to = "sample", values_to = "expression") %>%
+  mutate(
+    condition = ifelse(grepl("pre", sample), "Pre", "Post"),
+    sample = gsub("_pre|_post", "", sample),
+    gene = rownames(SAMS2_count_TPM)
+  ) %>%
+  select(sample, gene, condition, expression)
+
+genes_of_interest <- c("MT-ND2", "MT-ND5", "MT-ND6", "MT-ATP8")
+data_filtered <- SAMS2_long %>%
+  filter(gene %in% genes_of_interest)
+
+# Convert expression to log2(TPM+1) if not already transformed
+data_filtered <- data_filtered %>%
+  mutate(expression = log2(expression + 1))
+
+p <- ggplot(data_filtered, aes(x = condition, y = expression, group = sample)) +
+  geom_line(aes(group = sample), alpha = 0.3) +  # Draw lines connecting paired samples
+  geom_point(size = 1.5, shape = 21, fill = "white") +
+  facet_wrap(~ gene, scales = "free_y") +  # Separate plot for each gene
+  labs(x = NULL, y = "log2(TPM + 1)") +
   theme_minimal() +
-  theme(plot.title = element_text(hjust = 0.5))  # Center the plot title
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Adjust x-axis text angle
 
-# Figure S8B
-# Load required libraries
-library(ggplot2)
+# Adding p-values
+# You can manually add them using annotate() if you have a predefined list
+p <- p + annotate("text", x = 1.5, y = Inf, label = "Paired t-test p = X.XXe-XX", vjust = 1.5)
 
-# Read PCA data file
-dat <- read.table("PCA_merge2_pruned.pca.eigenvec", header=FALSE)
-colnames(dat)[1] <- "FID"  # Change column header of first column to FID
-colnames(dat)[2] <- "IID"  # Change column header of second column to IID
-
-# Read population data
-pop <- read.table("racefile.txt", header=TRUE)
-colnames(pop)[3] <- "group"  # Rename the third column to "group"
-
-# Merge PCA data with population data
-data <- merge(dat, pop, by=c("IID", "FID"), all=FALSE)
-
-# Ensure 'group' is treated as a factor
-data$group <- as.factor(data$group)
-
-# Identify indices for different population groups
-OWN <- which(data$group == "OWN")
-EUR <- which(data$group == "EUR")
-EAS <- which(data$group == "EAS")
-AMR <- which(data$group == "AMR")
-AFR <- which(data$group == "AFR")
-SAS <- which(data$group == "SAS")
-
-# Start a PDF device to save the plot
-pdf("pca-ancestry-plot2.pdf")
-
-# Create an empty plot setting the limits
-plot(0, 0, pch="", xlim=c(-0.02, 0.04), ylim=c(-0.05, 0.05), xlab="Principal Component 1", ylab="Principal Component 2")
-
-# Add points for each group with different colors and point characters
-points(data$V3[EAS], data$V4[EAS], pch=20, col="#66c2a5", cex=0.1)
-points(data$V3[AMR], data$V4[AMR], pch=20, col="#fc8d62", cex=0.1)
-points(data$V3[AFR], data$V4[AFR], pch=20, col="#8da0cb", cex=0.1)
-points(data$V3[EUR], data$V4[EUR], pch=20, col="#e78ac3", cex=0.1)
-points(data$V3[SAS], data$V4[SAS], pch=20, col="#a6d854", cex=0.1)
-points(data$V3[OWN], data$V4[OWN], pch="+", col="BLACK", cex=0.6)
-
-# Add grid lines for reference
-abline(v=-0.01, col="gray32", lty=2)
-abline(h=-0.02, col="gray32", lty=2)
-
-# Add a legend to the plot
-legend("topright", pch=c(20, 20, 20, 20, 20, 3), labels=c("EUR", "AMR", "AFR", "EAS", "SAS", "OWN"), col=c("#e78ac3", "#fc8d62", "#8da0cb", "#66c2a5", "#a6d854", "BLACK"), bty="o", cex=1)
-
-# Close the PDF device
-dev.off()
+# Print the plot
+print(p)

@@ -1,58 +1,61 @@
-## Load necessary library
 library(ggplot2)
-library(qqman)
+library(dplyr)
+library(tidyr)
 
-## Figure S11A - Line chart similar to the previous Figure S9A
-P1 <- ggplot(data, aes(x = Number_of_PC)) +
-  geom_line(aes(y = PRE, color = "PRE"), size = 0.5) +
-  geom_point(aes(y = PRE), color = "darkred", size = 4) +
-  geom_line(aes(y = POST, color = "POST"), size = 0.5) +
-  geom_point(aes(y = POST), color = "darkblue", size = 4) +
-  labs(x = "Number of hidden factors", y = "Number of Genes", title = "Analysis of Gene Number by Hidden Factors") +
-  scale_color_manual(values = c("PRE" = "darkred", "POST" = "darkblue")) +
-  scale_x_continuous(breaks = 1:10) +
-  geom_vline(xintercept = 1:2, linetype = "dashed", color = "black", size = 1) +
-  theme_minimal() +
-  theme(plot.title = element_text(size = 16, face = "bold"), axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12), legend.title = element_blank(), legend.text = element_text(size = 12),
-        legend.position = "top", panel.border = element_rect(color = "black", fill = NA, size = 1))
-ggsave("line_chart_analysis.pdf", plot = P1, width = 7, height = 5)
+merged_data_with_baseline$recessive <- ifelse(merged_data_with_baseline$Code_numeric == 1, 1, 0)
+merged_data_with_baseline$dominant <- ifelse(merged_data_with_baseline$Code_numeric == 0, 1, 0)
+merged_data_with_baseline$additive <- ifelse(merged_data_with_baseline$Code_numeric == 2, 1, 0)
+merged_data_with_baseline$additive <- as.numeric(as.character(merged_data_with_baseline$additive))
 
-## Figure S11B - Histogram of p-value distribution
-eqtl_pval_check <- ggplot(joint_filtered, aes(x = pval)) +
-  geom_histogram(binwidth = 0.001, color = "black", fill = "grey") +
-  labs(x = "p-value", y = "Frequency") +
-  scale_x_continuous(limits = c(0, 1)) +  
-  ylim(0, 15000) +
-  theme_minimal() +
-  theme(axis.text.x = element_blank())
-ggsave("pval_distribution_histogram.pdf", plot = eqtl_pval_check, width = 8, height = 6)
+# additive
+additive_model <- lm(weight_percent_change ~ Code_numeric + age + no.of.gym, 
+                     data = merged_data_with_baseline)
+summary(additive_model)
 
-## Figure S11C - QQ plot
-qqplot_data <- qqunif(joint_filtered$pval, plot.it = FALSE)
-x <- as.data.frame(qqplot_data)
-p <- ggplot(x, aes(x = x, y = y)) + 
-  geom_point() + 
-  geom_abline(intercept = 0, slope = 1, color = 'red')+
-  xlab('Expected p-values') + 
-  ylab('Observed p-values')
-ggsave("qq_plot_pvalues.pdf", plot = p, width = 8, height = 6)
+# recessive
+recessive_model <- lm(weight_percent_change ~ recessive + age + no.of.gym, 
+                      data = merged_data_with_baseline)
+summary(recessive_model)
 
-## Figure S11D - Density plot for distance to splicing donor/acceptor
-plot_eqtl_vs_dist <- function(ras_filtered) {
-  sig_eqtl <- ras_filtered[ras_filtered$pval < 1e-4, ]
-  ggplot(sig_eqtl, aes(x = dist_to_splicing)) +
-    geom_density(color = 'black', fill = 'black') +
-    xlab('Distance to Splicing Donor/Acceptor') +
-    ylab('Frequency')
-}
+# dominant
+dominant_model <- lm(weight_percent_change ~ dominant + age + no.of.gym, 
+                     data = merged_data_with_baseline)
+summary(dominant_model)
 
-## Figure S11E - Plot for fraction distance within intron
-plot_fraction_distance <- function(ras_filtered) {
-  ras_subset <- ras_filtered[abs(ras_filtered$intron_fraction_dist) < 1, ]
-  p <- ggplot(ras_subset, aes(x = intron_fraction_dist, y = -log10(pval))) +
-    geom_point(alpha = 0.5) +
-    xlab('Fraction Distance Within Intron') +
-    ylab(expression(-log[10]*'(p-value)'))
-  return(p)
-}
+AIC_comparison <- data.frame(
+  Model = c("Additive", "Dominant", "Recessive"),
+  AIC = c(AIC(additive_model), AIC(dominant_model), AIC(recessive_model)),
+  R_squared = c(summary(additive_model)$r.squared,
+                summary(dominant_model)$r.squared,
+                summary(recessive_model)$r.squared)
+)
+print(AIC_comparison)
+
+detailed_stats <- merged_data_with_baseline %>%
+  group_by(Code) %>%
+  summarise(
+    n = n(),
+    mean_change = mean(weight_percent_change, na.rm = TRUE),
+    sd_change = sd(weight_percent_change, na.rm = TRUE),
+    se_change = sd_change / sqrt(n),
+    ci_lower = mean_change - 1.96 * se_change,
+    ci_upper = mean_change + 1.96 * se_change
+  )
+print(detailed_stats)
+
+ggplot(detailed_stats, aes(x = Code, y = mean_change)) +
+  geom_bar(stat = "identity", fill = "skyblue", alpha = 0.7) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  labs(x = "Genotype", y = "Mean Weight Change (%)",
+       title = "Mean Weight Change by Genotype",
+       subtitle = "Error bars represent 95% CI") +
+  theme_minimal()
+
+# 4.2 violin plot with boxplot
+ggplot(merged_data_with_baseline, aes(x = Code, y = weight_percent_change)) +
+  geom_violin(fill = "lightblue", alpha = 0.5) +
+  geom_boxplot(width = 0.2, fill = "white", alpha = 0.7) +
+  labs(x = "Genotype", y = "Weight Change (%)",
+       title = "Distribution of Weight Change by Genotype") +
+  theme_minimal()
+

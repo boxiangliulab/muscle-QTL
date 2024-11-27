@@ -1,96 +1,59 @@
-## Figure S9A
-# Load necessary library
+# Figure S9A
 library(ggplot2)
 
-# Prepare data
-P1 <- ggplot(data, aes(x = Number_of_PC)) +
-  geom_line(aes(y = PRE, color = "PRE"), size = 0.5) +
-  geom_point(aes(y = PRE), color = "darkred", size = 4) +
-  geom_line(aes(y = POST, color = "POST"), size = 0.5) +
-  geom_point(aes(y = POST), color = "darkblue", size = 4) +
-  labs(
-    x = "Number of hidden factors",
-    y = "Number of Genes",
-    title = "Analysis of Gene Number by Hidden Factors"
-  ) +
-  scale_color_manual(values = c("PRE" = "darkred", "POST" = "darkblue")) +
-  scale_x_continuous(breaks = 1:10) +
-  geom_vline(xintercept = 1:2, linetype = "dashed", color = "black", size = 1) +
+ggplot(plink_check_sex, aes(x = F_index)) +
+  geom_histogram(bins = 10, fill = "blue", color = "black") + 
+  labs(title = "Gender Determination Based on F Index", x = "F Index (plink --check-sex)", y = "Frequency") +
   theme_minimal() +
-  theme(
-    plot.title = element_text(size = 16, face = "bold"),
-    axis.title = element_text(size = 14),
-    axis.text = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 12),
-    legend.position = "top",
-    panel.border = element_rect(color = "black", fill = NA, size = 1)
-  )
+  theme(plot.title = element_text(hjust = 0.5))  # Center the plot title
 
-# Display the plot
-print(P1)
+# Figure S9B
+# Load required libraries
+library(ggplot2)
 
-# Save the plot to a file
-ggsave("sIntron_PC_correction.pdf", P1, width = 7, height = 5)
+# Read PCA data file
+dat <- read.table("PCA_merge2_pruned.pca.eigenvec", header=FALSE)
+colnames(dat)[1] <- "FID"  # Change column header of first column to FID
+colnames(dat)[2] <- "IID"  # Change column header of second column to IID
 
-## Figure S9B
-# Histogram for 'joint_filtered' dataset
-eqtl_pval_check <- ggplot(joint_filtered, aes(x = pval)) +
-  geom_histogram(binwidth = 0.001, color = "black", fill = "grey") +
-  labs(x = "p-value", y = "Frequency") +
-  scale_x_continuous(limits = c(0, 1)) +
-  ylim(0, 15000) +
-  theme_minimal() +
-  theme(axis.text.x = element_blank())
+# Read population data
+pop <- read.table("racefile.txt", header=TRUE)
+colnames(pop)[3] <- "group"  # Rename the third column to "group"
 
-ggsave("../../../muscleQTL/eQTL mapping/eqtl_pval_check.pdf", plot = eqtl_pval_check, width = 8, height = 6)
+# Merge PCA data with population data
+data <- merge(dat, pop, by=c("IID", "FID"), all=FALSE)
 
-# Histogram for 'test_for_pval_check' dataset
-test_pval_check_plot <- ggplot(test_for_pval_check, aes(x = pval)) +
-  geom_histogram(binwidth = 0.001, color = "black", fill = "grey") +
-  labs(x = "p-value", y = "Frequency") +
-  scale_x_continuous(limits = c(0, 1)) +
-  theme_minimal() +
-  theme(axis.text.x = element_blank())
+# Ensure 'group' is treated as a factor
+data$group <- as.factor(data$group)
 
-# This line saves the plot to a specified directory; adjust the path as needed.
-ggsave("../eQTL mapping/eqtl_test_pval_check.pdf", plot = test_pval_check_plot, width = 8, height = 6)
+# Identify indices for different population groups
+OWN <- which(data$group == "OWN")
+EUR <- which(data$group == "EUR")
+EAS <- which(data$group == "EAS")
+AMR <- which(data$group == "AMR")
+AFR <- which(data$group == "AFR")
+SAS <- which(data$group == "SAS")
 
-## Figure S9C
-# QQ plot for 'post_pval_check' dataset
-qqplot <- qq(post_pval_check$pval)  # Assuming 'post_pval_check' is correctly formatted
+# Start a PDF device to save the plot
+pdf("pca-ancestry-plot2.pdf")
 
-# Save the QQ plot
-ggsave("../eQTL mapping/eqtl_qq_check.pdf", plot = qqplot, width = 8, height = 6)
+# Create an empty plot setting the limits
+plot(0, 0, pch="", xlim=c(-0.02, 0.04), ylim=c(-0.05, 0.05), xlab="Principal Component 1", ylab="Principal Component 2")
 
-# Additional QQ plots for demonstration (ensure these are valid calls)
-qq(Post_rasqual_pval_check$p_value)  # Assumes 'Post_rasqual_pval_check' is a defined data frame
-qq(Post_full_variants.txt$V19)        # Assumes 'Post_full_variants.txt' is read and V19 is the column of interest
+# Add points for each group with different colors and point characters
+points(data$V3[EAS], data$V4[EAS], pch=20, col="#66c2a5", cex=0.1)
+points(data$V3[AMR], data$V4[AMR], pch=20, col="#fc8d62", cex=0.1)
+points(data$V3[AFR], data$V4[AFR], pch=20, col="#8da0cb", cex=0.1)
+points(data$V3[EUR], data$V4[EUR], pch=20, col="#e78ac3", cex=0.1)
+points(data$V3[SAS], data$V4[SAS], pch=20, col="#a6d854", cex=0.1)
+points(data$V3[OWN], data$V4[OWN], pch="+", col="BLACK", cex=0.6)
 
-## Figure S9D 
-# Function to plot density of significant eQTLs by distance
-plot_eqtl_vs_dist <- function(ras_filtered) {
-  sig_eqtl <- ras_filtered[ras_filtered$pval < 1e-4, ]
-  
-  ggplot(sig_eqtl, aes(x = dist)) +
-    geom_density(color = 'black', fill = 'black') +
-    xlab('Distance to TSS') +
-    ylab('Frequency')
-}
+# Add grid lines for reference
+abline(v=-0.01, col="gray32", lty=2)
+abline(h=-0.02, col="gray32", lty=2)
 
-## Figure S9E
-plot_pvalue_vs_position <- function(ras_filtered) {
-  ras_subset <- ras_filtered[abs(ras_filtered$dist) < 2e5, ]
-  idx <- sample(nrow(ras_subset), size = min(5e3, nrow(ras_subset)))
-  ras_subset <- ras_subset[idx, ]
-  
-  ggplot(ras_subset, aes(x = dist, y = -log10(pval), size = (10 * abs(pi - 0.5))^2)) +
-    geom_point(alpha = 0.2) +
-    scale_size_continuous(name = expression('|'*pi*'-0.5|'), 
-                           breaks = (10 * c(0, 0.1, 0.2, 0.3, 0.4, 0.5))^2, 
-                           labels = c(0, 0.1, 0.2, 0.3, 0.4, 0.5)) +
-    scale_y_continuous(trans = 'sqrt') +
-    xlab('Distance to TSS') +
-    ylab(expression(-log[10]*'(p-value)')) +
-    theme(legend.position = c(0.05, 0.99), legend.justification = c('left', 'top'))
-}
+# Add a legend to the plot
+legend("topright", pch=c(20, 20, 20, 20, 20, 3), labels=c("EUR", "AMR", "AFR", "EAS", "SAS", "OWN"), col=c("#e78ac3", "#fc8d62", "#8da0cb", "#66c2a5", "#a6d854", "BLACK"), bty="o", cex=1)
+
+# Close the PDF device
+dev.off()

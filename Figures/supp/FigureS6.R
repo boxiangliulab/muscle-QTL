@@ -1,26 +1,35 @@
+# Figure S6A
+library(Rsamtools)
 library(ggplot2)
-library(dplyr)
 
-# Extract 'myocyte' column from each dataset and create a combined data frame with an intervention label
-pre_data <- pre_celltype_fraction_bmind %>%
-  select(myocyte) %>%
-  mutate(Intervention = 'Pre')
+# Create the histogram from STAR outpus 
+ggplot(data.frame(UMR = Uniquely_Mapped_Reads), aes(x = Sample_id)) +
+  geom_histogram(binwidth = 1e6, fill = "gray") +
+  labs(title = "SAMS2 Sample Read Depths", x = "Sample Name", y = "Read Depth") +
+  theme_minimal()
 
-post_data <- post_celltype_fraction_bmind %>%
-  select(myocyte) %>%
-  mutate(Intervention = 'Post')
+# Figure S6B
+library(ggplot2)
 
-# Combine the data frames
-combined_data <- bind_rows(pre_data, post_data)
+# Extract this data from the BAM files
 
-# Generate the violin plot
-ggplot(combined_data, aes(x = Intervention, y = myocyte, fill = Intervention)) +
-  geom_violin(trim = FALSE) +
-  scale_fill_manual(values = c("Pre" = "red", "Post" = "blue")) +
-  labs(title = "Violin Plot of Myocyte Fraction in Skeletal Muscle RNA-seq",
-       subtitle = "Pre- and Post-intervention",
-       x = NULL,
-       y = "Myocyte Fraction") +
-  theme_minimal() +
-  theme(legend.position = "none") 
+# Creating the scatter plot
+ggplot(chromosome_coverage, aes(x = X_Coverage, y = Y_Coverage)) +
+  geom_point() +
+  labs(title = "Sex Determination Based on Chromosome Coverage", x = "X Chromosome Coverage", y = "Y Chromosome Coverage") +
+  theme_minimal()
 
+# Figure S6C
+library(ggplot2)
+library(ggfortify)
+
+# Load count dat
+count_data <- read.csv("SAMS2_count_table.csv") 
+
+# Perform PCA
+pca_result <- prcomp(count_data, scale. = TRUE)
+
+# Plotting the PCA
+autoplot(pca_result, data = count_data, label = TRUE, label.size = 3) +
+  labs(title = "PCA of SAMS2 Count Data") +
+  theme_minimal()

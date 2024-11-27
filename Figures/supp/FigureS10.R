@@ -1,51 +1,96 @@
-library(vcfR)
+## Figure S10A
+# Load necessary library
 library(ggplot2)
 
-# Function to extract genotype data from a VCF file for a specific SNP
-extract_genotypes <- function(vcf_path, snp_id) {
-    vcf <- read.vcfR(vcf_path)
+# Prepare data
+P1 <- ggplot(data, aes(x = Number_of_PC)) +
+  geom_line(aes(y = PRE, color = "PRE"), size = 0.5) +
+  geom_point(aes(y = PRE), color = "darkred", size = 4) +
+  geom_line(aes(y = POST, color = "POST"), size = 0.5) +
+  geom_point(aes(y = POST), color = "darkblue", size = 4) +
+  labs(
+    x = "Number of hidden factors",
+    y = "Number of Genes",
+    title = "Analysis of Gene Number by Hidden Factors"
+  ) +
+  scale_color_manual(values = c("PRE" = "darkred", "POST" = "darkblue")) +
+  scale_x_continuous(breaks = 1:10) +
+  geom_vline(xintercept = 1:2, linetype = "dashed", color = "black", size = 1) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    axis.title = element_text(size = 14),
+    axis.text = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12),
+    legend.position = "top",
+    panel.border = element_rect(color = "black", fill = NA, size = 1)
+  )
 
-    snp_index <- which(vcf@fix[, "ID"] == snp_id)
-    if (length(snp_index) == 0) {
-        stop("SNP ID not found in the VCF file.")
-    }
+# Display the plot
+print(P1)
 
-    genotypes <- extract.gt(vcf, element = "GT", snp.index = snp_index)
+# Save the plot to a file
+ggsave("sIntron_PC_correction.pdf", P1, width = 7, height = 5)
 
-    readable_genotypes <- apply(genotypes, 2, function(g) {
-        gsub("0", vcf@ref[snp_index], g)
-        gsub("1", vcf@alt[snp_index, 1], g) # Assuming biallelic SNP for simplicity
-    })
+## Figure S10B
+# Histogram for 'joint_filtered' dataset
+eqtl_pval_check <- ggplot(joint_filtered, aes(x = pval)) +
+  geom_histogram(binwidth = 0.001, color = "black", fill = "grey") +
+  labs(x = "p-value", y = "Frequency") +
+  scale_x_continuous(limits = c(0, 1)) +
+  ylim(0, 15000) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank())
 
-    # Return a dataframe with Sample IDs and their genotypes
-    data.frame(SampleID = names(readable_genotypes), Genotype = readable_genotypes, stringsAsFactors = FALSE)
+ggsave("../../../muscleQTL/eQTL mapping/eqtl_pval_check.pdf", plot = eqtl_pval_check, width = 8, height = 6)
+
+# Histogram for 'test_for_pval_check' dataset
+test_pval_check_plot <- ggplot(test_for_pval_check, aes(x = pval)) +
+  geom_histogram(binwidth = 0.001, color = "black", fill = "grey") +
+  labs(x = "p-value", y = "Frequency") +
+  scale_x_continuous(limits = c(0, 1)) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank())
+
+# This line saves the plot to a specified directory; adjust the path as needed.
+ggsave("../eQTL mapping/eqtl_test_pval_check.pdf", plot = test_pval_check_plot, width = 8, height = 6)
+
+## Figure S10C
+# QQ plot for 'post_pval_check' dataset
+qqplot <- qq(post_pval_check$pval)  # Assuming 'post_pval_check' is correctly formatted
+
+# Save the QQ plot
+ggsave("../eQTL mapping/eqtl_qq_check.pdf", plot = qqplot, width = 8, height = 6)
+
+# Additional QQ plots for demonstration (ensure these are valid calls)
+qq(Post_rasqual_pval_check$p_value)  # Assumes 'Post_rasqual_pval_check' is a defined data frame
+qq(Post_full_variants.txt$V19)        # Assumes 'Post_full_variants.txt' is read and V19 is the column of interest
+
+## Figure S10D 
+# Function to plot density of significant eQTLs by distance
+plot_eqtl_vs_dist <- function(ras_filtered) {
+  sig_eqtl <- ras_filtered[ras_filtered$pval < 1e-4, ]
+  
+  ggplot(sig_eqtl, aes(x = dist)) +
+    geom_density(color = 'black', fill = 'black') +
+    xlab('Distance to TSS') +
+    ylab('Frequency')
 }
 
-
-
-
-# Function to plot gene expression by genotype
-plot_gene_expression <- function(expr_data, gene_id, genotype_data) {
-    gene_expr <- as.data.frame(t(expr_data[gene_id, ]), stringsAsFactors = FALSE)
-    colnames(gene_expr) <- "Expression"
-    gene_expr$SampleID <- rownames(gene_expr)
-
-    merged_data <- merge(gene_expr, genotype_data, by = "SampleID")
-
-    merged_data$Genotype <- factor(merged_data$Genotype)
-
-    ggplot(merged_data, aes(x = Genotype, y = Expression)) +
-        geom_boxplot(aes(fill = Genotype)) +
-        labs(title = paste("Expression of", gene_id, "by Genotype"), x = "Genotype", y = "Expression") +
-        theme_minimal()
+## Figure S10E
+plot_pvalue_vs_position <- function(ras_filtered) {
+  ras_subset <- ras_filtered[abs(ras_filtered$dist) < 2e5, ]
+  idx <- sample(nrow(ras_subset), size = min(5e3, nrow(ras_subset)))
+  ras_subset <- ras_subset[idx, ]
+  
+  ggplot(ras_subset, aes(x = dist, y = -log10(pval), size = (10 * abs(pi - 0.5))^2)) +
+    geom_point(alpha = 0.2) +
+    scale_size_continuous(name = expression('|'*pi*'-0.5|'), 
+                           breaks = (10 * c(0, 0.1, 0.2, 0.3, 0.4, 0.5))^2, 
+                           labels = c(0, 0.1, 0.2, 0.3, 0.4, 0.5)) +
+    scale_y_continuous(trans = 'sqrt') +
+    xlab('Distance to TSS') +
+    ylab(expression(-log[10]*'(p-value)')) +
+    theme(legend.position = c(0.05, 0.99), legend.justification = c('left', 'top'))
 }
-
-# Examples
-vcf_path <- "SAMS2.vcf"
-snp_id <- "rs12437434"
-gene_id <- "ENSG00000187630"
-expr_data <- corrected_TPM_SAMS2_bulk
-
-genotype_data <- extract_genotypes(vcf_path, snp_id)
-expression_plot <- plot_gene_expression(expr_data, gene_id, genotype_data)
-print(expression_plot)
