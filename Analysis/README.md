@@ -43,12 +43,15 @@
 -  `07.treeQTL.R`: Performs treeQTL analysis, which is an approach for identifying eQTLs that affect gene expression changes in different tissues or conditions.
 -  `08.treeQTL_multi_tissue.R`: Extends treeQTL analysis across multiple tissues, enhancing the understanding of tissue-specific genetic regulation.
 -  `09.compare_GTEx.R`: Compares the local eQTL results with GTEx (Genotype-Tissue Expression) project data to validate findings and explore tissue-specific effects.
--  `10.ethnicity_specific_QTL.R`: Analyzes eQTLs in the context of specific ethnic groups, identifying population-specific genetic effects on gene expression.
+-  `10.ethnicity_specific_eQTL.R`: Analyzes eQTLs in the context of specific ethnic groups, identifying Asian-specific genetic effects on gene expression.
+-  `11.interaction_eQTLs.R`: Further analyzes shared eQTLs (share both in pre-intervention and post-intervention) to find the interaction eQTLs.
 
 ### 6. sQTL mapping
 -  `00.phenotype_prepare.sh`: Prepares phenotype data for sQTL analysis, ensuring that the input data is correctly formatted and processed.
 -  `01.nominal_pass.sh`: Conducts nominal testing for sQTL, identifying initial associations between genetic variants and alternative splicing events.
 -  `02.permutation_pass.sh`: Applies permutation tests to assess the statistical significance of the sQTL findings, controlling for multiple testing and reducing false positives.
+-  `03.interaction_sQTLs.R`: Further analyzes shared sQTLs (share both in pre-intervention and post-intervention) to find the interaction sQTLs.
+-  `04.ethnicity_specific_sQTL.R`: Analyzes sQTLs in the context of specific ethnic groups, identifying Asian-specific genetic effects on gene splicing.
 
 ### 7. Colocalization
 -  `00.prepare_GWAS.sh`: Prepares GWAS summary statistics for colocalization analysis, aligning SNP identifiers and effect sizes.
